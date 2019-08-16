@@ -1,0 +1,21 @@
+{
+  "name": "prismagram",
+  "version": "1.0.0",
+  "description": "Instagram clone width Express + Prisma + React and React Native",
+  "repository": "https://github.com/do0401/prismagram",
+  "author": "nmwh <43128952+do0401@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/node": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "dotenv": "^8.0.0",
+    "graphql-yoga": "^1.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  },
+  "scripts": {
+    "dev": "nodemon --exec babel-node src/server.js"
+  }
+}
