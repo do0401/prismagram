@@ -46,4 +46,52 @@ Instagram clone width Express + Prisma + React and React Native
 - nodemon은 파일을 저장할 때마다 서버를 재실행해준다.
 
 ### #1.1 Creating GraphQL Server
+- prisma를 시작하기 전에 dotenv를 설치한다.
 
+`yarn add dotenv`
+
+- dotenv는 .env 파일을 읽는다.
+- 이제 server.js를 작성한다.
+
+```js
+// server.js
+require("dotenv").config();
+import { GraphQLServer } from "graphql-yoga";
+
+const PORT = process.env.PORT || 4000;
+
+const typeDefs = `
+    type Query{
+        hello: String!
+    }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => "Hi"
+  }
+};
+
+const server = new GraphQLServer({ typeDefs, resolvers });
+
+server.start({ port: PORT }, () =>
+  console.log(`Server running on  http://localhost:${PORT}`)
+);
+
+// .babelrc
+{
+  "presets": ["@babel/preset-env"]
+}
+```
+
+- package.json과 같은 경로에 .babelrc 파일을 생성하고 작성해줬다.
+- 그리고 babel 관련 몇 가지 패키지를 설치한다.
+
+`yarn add @babel/preset-env`
+`yarn add @babel/node`
+`yarn add @babel/core`
+
+- 이제 graphql playground에서 hell 쿼리를 실행하면 hi 라는 응답이 올 것이다.
+
+### #1.2 Setting Up the Server like the Pros
+- 
