@@ -187,3 +187,36 @@ server.start({
 - Prisma는 ORM이다. Object-Relational Mapping(객체 관계 연결)
 - Prisma는 데이터베이스 과련한 어려운 문제들을 해결해준다.
 - Prisma는 어플리케이션에 필요한 모델을 graphql로 정의할 수 있다는 점에서 특별하다.
+- Prisma를 사용하기 위해서는 prisma 사이트에 가입해야 한다. 깃헙 계정으로도 로그인할 수 있다.
+
+`npm install -g prisma`
+
+- 먼저 prisma를 설치하고, prisma 사이트에 로그인하여 ADD A SERVICE 를 클릭한다.
+- Log into Prisma CLI 밑에 나오는 코드를 복사해서 로그인을 시도한다.
+- 로그인이 완료되면 성공 메시지와 함께 CREATE A NEW SERVICE 버튼이 보이며, 해당 버튼을 누르면 prisma를 시작하는 가이드 메시지를 확인할 수 있다.
+
+`prisma init prismagram`
+
+- prisma init 명령어로 서비스를 시작한다.
+- 몇 가지 선택 항목이 나오는데 아래와 같이 선택한다.
+
+`Demo server`
+`~~~~/demo-us1`
+`prismagram`
+`dev`
+`Prisma JavaScript Client`
+
+- 그러면 코드가 생성된다. 생성된 파일은 깃헙에서 숨기고 싶으므로 .gitignore에 추가한다
+
+```js
+// .gitignore
+generated
+```
+
+- 생성된 파일 중 datamodel.prisma 파일이 데이터 모델이다.
+- 이 모델을 prisma에 추가하려면 아래 명령어를 입력한다.
+
+`prisma deploy`
+
+- prsima 계정에 모두 자동으로 업로드가 된다. 바뀐 점도 반영해준다.
+- prisma 사이트에 가면 반영된 내용을 확인할 수 있다.
