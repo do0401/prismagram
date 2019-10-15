@@ -185,7 +185,7 @@ server.start({
 ## #2 Setting Up Prisma
 ### #2.0 Introduction to Prisma
 - Prisma는 ORM이다. Object-Relational Mapping(객체 관계 연결)
-- Prisma는 데이터베이스 과련한 어려운 문제들을 해결해준다.
+- Prisma는 데이터베이스 관련한 어려운 문제들을 해결해준다.
 - Prisma는 어플리케이션에 필요한 모델을 graphql로 정의할 수 있다는 점에서 특별하다.
 - Prisma를 사용하기 위해서는 prisma 사이트에 가입해야 한다. 깃헙 계정으로도 로그인할 수 있다.
 
@@ -220,3 +220,72 @@ generated
 
 - prsima 계정에 모두 자동으로 업로드가 된다. 바뀐 점도 반영해준다.
 - prisma 사이트에 가면 반영된 내용을 확인할 수 있다.
+
+### #2.1 Datamodel with Prisma
+- prisma에서 데이터 모델을 만들어보자.
+
+```js
+// datamodel.prisma
+type User {
+  id: ID! @id
+  username: String! @unique
+  email: String! @unique
+  firstName: String @default(value: "")
+  lastName: String
+  bio: String
+  followers: [User!]! @relation(name: "FollowRelation")
+  following: [User!]! @relation(name: "FollowRelation")
+  posts: [Post!]!
+  likes: [Like!]!
+  comment: [Comment!]!
+}
+
+type Post {
+  id: ID! @id
+  location: String
+  caption: String!
+  user: User!
+  files: [File!]!
+  likes: [Like!]!
+  comment: [Comment!]!
+}
+
+type Like {
+  id: ID! @id
+  user: User!
+  post: Post!
+}
+
+type Comment {
+  id: ID! @id
+  text: String!
+  user: User!
+  post: Post!
+}
+
+type File {
+  id: ID! @id
+  url: String!
+  post: Post!
+}
+```
+
+- ! 는 필수 값이라는 의미이다.
+- @unique 는 값이 unique 함을 의미한다.
+- @id 는 id 값을 의미한다.
+- @relation 을 통해 양방향으로 관계를 형셩해줄 수 있다.
+- deploy 명령어를 아래와 같이 수정해주자.
+
+```json
+// package.json
+// 코드 추가
+"scripts": {
+    "deploy": "prisma deploy",
+```
+
+- 이제 배포를 하면 prisma 관리 사이트에서 추가한 내용을 확인할 수 있다.
+- 그리고 터미널창에 아래와 같이 admin 페이지 주소가 표시된다.
+
+`https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev/_admin`
+
+- 위 주소에서 끝에 /_admin 만 삭제하고 브라우저에 입력하면 graphql playground를 확인할 수 있다.
