@@ -272,7 +272,7 @@ type File {
 
 - ! 는 필수 값이라는 의미이다.
 - @unique 는 값이 unique 함을 의미한다.
-- @id 는 id 값을 의미한다.
+- @id 는 id 값을 의미한다. id를 추가하지 않으면 delete를 실행할 수 없다.
 - @relation 을 통해 양방향으로 관계를 형셩해줄 수 있다.
 - deploy 명령어를 아래와 같이 수정해주자.
 
@@ -289,3 +289,8 @@ type File {
 `https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev/_admin`
 
 - 위 주소에서 끝에 /_admin 만 삭제하고 브라우저에 입력하면 graphql playground를 확인할 수 있다.
+
+### #2.2 Testing Prisma OMG
+- create는 모든 모델에 할 수 있다. createUser, createPost 등등
+- 하지만 delete는 User에만 가능하다.
+- 
