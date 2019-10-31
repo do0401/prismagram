@@ -291,6 +291,150 @@ type File {
 - 위 주소에서 끝에 /_admin 만 삭제하고 브라우저에 입력하면 graphql playground를 확인할 수 있다.
 
 ### #2.2 Testing Prisma OMG
-- create는 모든 모델에 할 수 있다. createUser, createPost 등등
-- 하지만 delete는 User에만 가능하다.
-- 
+- datamodel.prisma 파일을 아래와 같이 완성한다.
+
+```js
+// datamodel.prisma
+type User {
+  id: ID! @id
+  username: String! @unique
+  email: String! @unique
+  firstName: String @default(value: "")
+  lastName: String
+  bio: String
+  followers: [User!]! @relation(name: "FollowRelation")
+  following: [User!]! @relation(name: "FollowRelation")
+  posts: [Post!]!
+  likes: [Like!]!
+  comment: [Comment!]!
+  rooms: [Room!]!
+  loginSecret: String!
+}
+
+type Post {
+  id: ID! @id
+  location: String
+  caption: String!
+  user: User!
+  files: [File!]!
+  likes: [Like!]!
+  comment: [Comment!]!
+}
+
+type Like {
+  id: ID! @id
+  user: User!
+  post: Post!
+}
+
+type Comment {
+  id: ID! @id
+  text: String!
+  user: User!
+  post: Post!
+}
+
+type File {
+  id: ID! @id
+  url: String!
+  post: Post!
+}
+
+type Room {
+  id: ID! @id
+  participants: [User!]!
+  messages: [Message!]!
+}
+
+type Message {
+  id: ID! @id
+  text: String!
+  from: User! @relation(name: "From") // 같은 모델로 관계를 형성하려면 relation을 지정해주어야 한다.
+  to: User! @relation(name: "To")
+  room: Room!
+}
+```
+
+- playground admin 페이지로 가서 사용자를 생성해보자.
+
+```js
+// playground admin (https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev)
+mutation {
+  createUser(data: {username:"kdh", email:"kdh@test.com"}) {
+    id
+  }
+}
+```
+
+- 위와 같이 사용자를 생성하고 admin 페이지로 이동해보면 사용자가 생성된 것을 확인할 수 있다.
+- graphql 파일만 작성하면 resolver도 생성되고, 서버도 만들어지고 관리 패널까지도 만들어진다.
+- 다른 사용자도 만들어본다.
+
+```js
+// playground admin (https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev)
+mutation {
+  createUser(data: {username:"CHY", email:"CHY@test.com"}) {
+    id
+  }
+}
+```
+
+- 이제 playground에서 방금 생성한 사용자 정보를 수정해본다.
+- 만약 어떤 것을 실행해야 할지 찾고 싶으면 오른쪽 DOCS 탭에서 모든 것을 확인할 수 있다.
+- 아래와 같이 입력해서 사용자를 업데이트한다.
+
+```js
+// playground admin (https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev)
+mutation {
+  updateUser(data: { firstName: "HY", lastName:"C" } where: { id:" ck240sa59swuh0b0914rw17z8" }) {
+    username
+  }
+}
+```
+
+- 그리고 사용자를 팔로잉하도록 한다.
+
+```js
+// playground admin (https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev)
+mutation {
+  updateUser(
+    data: { following: { connect: { id: "ck1smm6k444x40b403uwrojww" }}}
+    where: { id: "ck240sa59swuh0b0914rw17z8" }
+  ) {
+    username
+    firstName
+    lastName
+    following {
+      id
+    }
+    followers {
+      id
+    }
+  }
+}
+```
+
+- 팔로잉하도록 설정되었고 실제로 반환된 내용을 보면 following에 팔로잉한 사용자의 id를 확인할 수 있다.
+- 아래와 같이 팔로잉한 사용자를 조회하면 팔로워가 생긴 것을 확인할 수 있다.
+
+```js
+// playground admin (https://us1.prisma.sh/keepitlow-e432a9/prismagram/dev)
+{
+  user(where:{id:"ck1smm6k444x40b403uwrojww"}) {
+    username
+    followers {
+      email
+    }
+    following {
+      email
+    }
+    lastName
+    firstName
+  }
+}
+```
+
+- 양방향 relation이 잘 작동하고 있다.
+- admin 페이지에서도 모든 내용을 볼 수 있다.
+
+### #2.3 Intergrating Prisma in our Server
