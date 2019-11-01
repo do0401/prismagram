@@ -438,3 +438,28 @@ mutation {
 - admin 페이지에서도 모든 내용을 볼 수 있다.
 
 ### #2.3 Intergrating Prisma in our Server
+- 실제 api에서 어떻게 prisma를 사용하는지 알아보자.
+- 먼저 prisma.yml 파일을 .gitignore 파일에 추가한다.
+- prisma.yml 에는 admin url이 있으므로 공개되서는 안된다.
+- generated 폴더를 보면 prisma-client 폴더에 index와 prisma-schema 파일이 있다.
+- 이 파일을 통해 prisma와 정보를 주고 받게 된다.
+- prisma 서버와 정보를 주고 받으려면 prisma client를 다운받아야 한다.
+- package.json에 generate 명령어와 prisma 명령어를 추가한다.
+
+```json
+// package.json
+"scripts": {
+  "deploy": "prisma deploy",
+  "generate": "prisma generate",
+  "prisma": "yarn run deploy && yarn run generate",
+  "dev": "nodemon --exec babel-node src/server.js"
+}
+```
+
+- yarn prisma 를 실행하면 deploy가 실행되고 변경사항들이 업로드 되고 나면 client가 generate 된다. prisma와 상호작용할 client는 javascript이다.
+- 추가로 prisma-client-lib를 설치한다.
+
+`yarn add prisma-client-lib`
+
+- prisma는 자동으로 client를 만들어주며, 이 client는 사용자 정보를 체크할 수 있다.
+- 사용자가 서버에 요청을 하면 서버가 prisma에 요청한다.
