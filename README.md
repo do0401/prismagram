@@ -463,3 +463,112 @@ mutation {
 
 - prisma는 자동으로 client를 만들어주며, 이 client는 사용자 정보를 체크할 수 있다.
 - 사용자가 서버에 요청을 하면 서버가 prisma에 요청한다.
+
+### #2.4 Resolvers with Prisma
+- 우리는 기존 데이터모델 구조체를 복사해야 한다.
+
+```js
+// src/api/models.graphql
+type User {
+	id: ID!
+	username: String!
+	email: String!
+	firstName: String
+	lastName: String
+	bio: String
+	followers: [User!]!
+	following: [User!]!
+	posts: [Post!]!
+	likes: [Like!]!
+	comment: [Comment!]!
+	rooms: [Room!]!
+	loginSecret: String!
+}
+
+type Post {
+	id: ID!
+	location: String
+	caption: String!
+	user: User!
+	files: [File!]!
+	likes: [Like!]!
+	comment: [Comment!]!
+}
+
+type Like {
+	id: ID!
+	user: User!
+	post: Post!
+}
+
+type Comment {
+	id: ID!
+	text: String!
+	user: User!
+	post: Post!
+}
+
+type File {
+	id: ID!
+	url: String!
+	post: Post!
+}
+
+type Room {
+	id: ID!
+	participants: [User!]!
+	messages: [Message!]!
+}
+
+type Message {
+	id: ID!
+	text: String!
+	from: User!
+	to: User!
+	room: Room!
+}
+```
+
+- datamodel.prisma 파일 내용을 붙여넣기하고 directive 들을 모두 삭제한다. graphql 문법이 아니고 prisma 문법이기 때문이다. graphql은 prisma 문법을 이해하지 못한다.
+- 코드를 복사하는 건 좋은 방법이 아니다. 나중에는 prisma 파일을 graphql로 인식시켜주는 모델이 나오길 바란다.
+- 지금은 prisma 파일에 loginSecret 이라는 것만 추가해도 이것을 models.graphql에 똑같이 붙여넣어야 한다.
+- 이제 Greeting 은 삭제하고 User 폴더를 만들고 userById 폴더와 allUsers 폴더를 추가한다.
+
+```js
+// src/User/userById/userById.graphql
+type Query {
+	userById(id: String!): User!
+}
+
+// src/User/userById/userById.js
+import {
+  prisma
+} from "../../../../generated/prisma-client";
+export default {
+  Query: {
+    userById: async (_, args) => {  // 첫번째 인자에서는 아무 것도 받지 않는다.
+      const {
+        id        // args 에서 id를 받는다.
+      } = args;
+      return await prisma.user({
+        id        // id가 같은 user를 찾는다.
+      });
+    }
+  }
+}
+
+// src/User/allUsers/allUsers.graphql
+type Query {
+	allUsers: [User!]!
+}
+
+// src/User/allUsers/allUsers.js
+import {
+  prisma
+} from "../../../../generated/prisma-client";
+export default {
+  Query: {
+    allUsers: async () => prisma.users()
+  }
+}
+```
