@@ -572,3 +572,90 @@ export default {
   }
 }
 ```
+
+### #3.0 Planning the API
+
+- [ ] Log in
+- [ ] Like / Unlike a photo
+- [ ] Comment on a photo
+- [ ] Search by user
+- [ ] Search by location
+- [ ] See user profile
+- [ ] Follow / Unfollow User
+- [ ] See the full photo
+- [ ] Edit my profile
+- [ ] Create account
+- [ ] Upload a photo
+- [ ] Edit the photo (Delete)
+- [ ] See the feed
+
+### #3.1 Create Account Resolver
+- 먼저 admin 페이지에서 새 Post를 작성한다.
+- caption, location, user 를 입력하고 Post를 생성한다.
+- api 폴더 안에 Image/toggleLike 폴더를 생성한다. 이미 좋아요가 되어 있으면 좋아요 취소로 아이콘이 바뀔 것이다.
+- 하지만 좋아요 작업을 하기 전에 로그인을 먼저해야 한다. 로그인 시스템을 먼저 만들자.
+- User 폴더 안에 기존에 만들었던 allUsers와 userById 폴더를 삭제하고 createAccount 폴더를 생성한다.
+
+- createAccount를 위해서 prisma를 확인하여, 사용자 생성을 위해 무엇이 필요한지 확인할 수 있다.(admin - playground에서 확인)
+
+```js
+// api/User/createAccount
+// createAccount.graphql
+type Mutation {
+	createAccount(
+    username: String!,
+    email: String!,
+    firstName: String,
+    lastName: String,
+    bio: String
+  ): User!
+}
+
+type Query {
+	something: String!
+}
+```
+
+- graphql 파일에 mutation만 있으면 에러가 나므로 임의의 Query도 만들었다.
+
+```js
+// createAccount.js
+import {
+  prisma
+} from "../../../../generated/prisma-client";
+export default {
+  Mutation: {
+    createAccount: async (_, args) => {
+      const {
+        username,
+        email,
+        firstName = "",
+        lastName = "",
+        bio = ""
+      } = args;
+      const user = await prisma.createUser({
+        username,
+        email,
+        firstName,
+        lastName,
+        bio
+      });
+      return user;
+    }
+  }
+}
+```
+
+- firstName, lastName, bio는 비어 있을 수도 있으므로, 빈 문자열을 선언했다.
+- playground에서 createAccount를 실행해보자.
+
+```js
+// playground
+mutation {
+  createAccount(username: "Keepitlow", email:"nmwh47@gmail.com", firstName: "Dohwan", lastName: "Kim"){
+    id
+  }
+}
+```
+
+- admin 페이지에서 확인해 보면 사용자가 생성된 것을 확인할 수 있다.
