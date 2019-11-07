@@ -699,3 +699,78 @@ export const nouns = [
   // 가져온 명사 500개 단어를 배열로 만든다.
 ]
 ```
+
+- utills.js에는 randomNumber를 생성하는 generateSecret 함수를 만든다.
+
+```js
+// utill.js
+import {
+  adjectives,
+  nouns
+} from "./words"
+
+export const generateSecret = () => {
+  // 비밀값을 만드는 계산식
+  const randomNumber = Math.floor(Math.random() * adjectives.length);
+  // adjectives와 nouns를 리턴한다.
+  return `${adjectives[randomNumber]} ${nouns[randomNumber]}`
+};
+
+// requestSecret.js
+import { generateSecret } from "../../../utills";
+import { prisma } from "../../../../generated/prisma-client";
+
+export default {
+  Mutation: {
+    requestSecret: async (_, args) => {
+      const { email } = args;
+      const loginSecret = generateSecret();
+      console.log(loginSecret);
+      try {
+        // 사용자를 찾아서 갱신 요청을 하려면 유니크한 특성(id, username, email)들로만 할 수 있다.
+        // user의 email이 인자로 입력된 email과 같은 사용자를 where로 찾는다.
+        await prisma.updateUser({data: {loginSecret}, where: {email}});
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+}
+```
+
+- 테스트 전에 datamodel.prisma에서 User의 loginSecret을 필수값이 아니도록 수정한다.
+
+```js
+// datamodel.prisma
+// 코드 수정
+type User {
+  id: ID! @id
+  username: String! @unique
+  email: String! @unique
+  firstName: String @default(value: "")
+  lastName: String
+  bio: String
+  followers: [User!]! @relation(name: "FollowRelation")
+  following: [User!]! @relation(name: "FollowRelation")
+  posts: [Post!]!
+  likes: [Like!]!
+  comment: [Comment!]!
+  rooms: [Room!]!
+  loginSecret: String // !를 제거했다.
+}
+```
+
+`yarn prisma`
+
+- client 코드를 generate하고 테스트를 해보자.
+
+```js
+// playground
+mutation {
+  requestSecret (email: "이메일입력")
+}
+```
+
+- 위와 같이 입력하고 결과를 보면 정상적으로 "requestSecret": true 가 표시되는 것을 볼 수 있다.
+- admin 페이지에 가서 해당 이메일을 가진 user를 확인해보면 로그인 비밀값이 저장되어 있는 것을 확인할 수 있다.

@@ -9,9 +9,9 @@ type User {
   following: [User!]! @relation(name: "FollowRelation")
   posts: [Post!]!
   likes: [Like!]!
-  comments: [Comment!]!
+  comment: [Comment!]!
   rooms: [Room!]!
-  loginSecret: String!
+  loginSecret: String
 }
 
 type Post {
@@ -21,7 +21,7 @@ type Post {
   user: User!
   files: [File!]!
   likes: [Like!]!
-  comments: [Comment!]!
+  comment: [Comment!]!
 }
 
 type Like {

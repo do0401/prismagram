@@ -9,7 +9,7 @@ type User {
 	following: [User!]!
 	posts: [Post!]!
 	likes: [Like!]!
-	comments: [Comment!]!
+	comment: [Comment!]!
 	rooms: [Room!]!
 	loginSecret: String!
 }
@@ -21,7 +21,7 @@ type Post {
 	user: User!
 	files: [File!]!
 	likes: [Like!]!
-	comments: [Comment!]!
+	comment: [Comment!]!
 }
 
 type Like {
