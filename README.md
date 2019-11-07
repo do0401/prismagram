@@ -575,7 +575,9 @@ export default {
 
 ### #3.0 Planning the API
 
-- [ ] Log in
+- [ ] Create account
+- [ ] Request Secret
+- [ ] Confirm Secret (Login)
 - [ ] Like / Unlike a photo
 - [ ] Comment on a photo
 - [ ] Search by user
@@ -584,7 +586,6 @@ export default {
 - [ ] Follow / Unfollow User
 - [ ] See the full photo
 - [ ] Edit my profile
-- [ ] Create account
 - [ ] Upload a photo
 - [ ] Edit the photo (Delete)
 - [ ] See the feed
@@ -659,3 +660,42 @@ mutation {
 ```
 
 - admin 페이지에서 확인해 보면 사용자가 생성된 것을 확인할 수 있다.
+
+### #3.2 requestSecret Resolver
+
+- [x] Create account
+- 이제 로그인을 해보자. 여기서 로그인은 비밀값을 요청하고 확인하는 과정을 의미한다.
+- User 폴더 안에 requestSecret 폴더를 생성하고, 그 안에 requestSecret.js 파일과 requestSecret.graphql 파일도 만든다.
+
+```js
+// api/User/requestSecret
+// reqeustSecret.graphql
+type Mutation {
+	requestSecret(email: String!): Boolean! // Boolean 타입을 리턴하고, 함수 인자로 String 타입인 email이 필요하다
+}
+
+// requestSecret.js
+export default {
+  Mutation: {
+    requestSecret: async (_, args) => {
+      const {
+        email
+      } = args;
+    }
+  }
+}
+```
+
+- 비밀값을 생성할 함수를 만들기 위해 api폴더 바깥에 utill.js를 만든다.
+- 비밀값을 만들기 위해서는 매우 많은 단어를 가져와야 한다.
+- word generator에서 무작위 형용사 500개와 명사 500개를 가져온다.
+
+```js
+// src/words.js
+export const adjectives = [
+  // 가져온 형용사 500개 단어를 배열로 만든다.
+]
+export const nouns = [
+  // 가져온 명사 500개 단어를 배열로 만든다.
+]
+```
