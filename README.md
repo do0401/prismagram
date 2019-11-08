@@ -803,7 +803,7 @@ dotenv.config({
 ```js
 // utils.js
 // 코드 추가
-export const sendMail = email => null;
+export const sendMail = email => null;  // email은 주소만이 아닌, 필요한 모든 것이 담겨있다.
 
 export const sendSecretMail = (address, secret) => {
   const email = {
@@ -814,3 +814,67 @@ export const sendSecretMail = (address, secret) => {
   }
 };
 ```
+
+- nodemailer는 기본 값들로 transport라는 것을 만들고, 그것으로 sendMail을 요청하면 끝이다.
+- 우리는 sendgrid 라는 것을 사용해 볼 것이다.
+- sendgrid 사이트로 이동해서 계정을 만들고 로그인한다.
+- 로그인하고나서 sendgrid에서 테스트를 할 것이다.
+
+`yarn add nodemailer-sendgrid-transport`
+
+- sendgrid transport를 다운로드 받는다.
+- utils.js에 nodemailer 모듈과 nodemailer=sendgrid-transport 모듈을 import 한다.
+
+```js
+// utils.js
+// 코드 추가/수정
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({
+  path: path.resolve(__dirname, ".env") // server.js와 마찬가지로 dotenv를 import했다
+});
+import nodemailer from "nodemailer";
+import sgTransport from "nodemailer-sendgrid-transport";
+
+export const sendMail = email => {
+  const options = {
+    auth: {
+      api_user: process.env.SENDGRID_USERNAME,  // sendgrid 계정 username 입력
+      api_key: process.env.SENDGRID_PASSWORD    // sendgrid 계정 password 입력
+    }
+  };
+};
+
+// .env
+SENDGRID_USERNAME=do0401
+SENDGRID_PASSWORD="sendgridqlqjs1"
+```
+- import 후 sendMail에 options을 만들었다.
+- sendgrid 계정 정보는 .env에 넣어둔다.
+- 다음으로 nodemailer.createTransport와 client.sendMail을 실행해야한다.
+
+```js
+// utils.js
+// 코드 추가
+const sendMail = email => {   // sendMail은 외부에서 사용하지 않을 것이므로 export 하지 않아도 된다.
+  const options = {
+    auth: {
+      api_user: process.env.SENDGRID_USERNAME,
+      api_key: process.env.SENDGRID_PASSWORD
+    }
+  };
+  const client = nodemailer.createTransport(sgTransport(options));  // createTransport를 실행한 결과물을 client에 할당한다.
+  return client.sendMail(email);  // 그리고 cilent.sendMail을 실행한다.
+};
+
+export const sendSecretMail = (address, secret) => {
+  const email = {
+    from: "kdh@prismagram.com",
+    to: address,
+    subject: "🔒Login Secret for Prismagram🔒",
+    html: `Hello! Your login secret it ${secret}.<br/>Copy paste on the app/website to log in`
+  };
+  return sendMail(email);   // sendMail(email)은 여기서 실행한다.
+};
+```
+
