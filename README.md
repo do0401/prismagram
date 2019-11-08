@@ -774,3 +774,43 @@ mutation {
 
 - 위와 같이 입력하고 결과를 보면 정상적으로 "requestSecret": true 가 표시되는 것을 볼 수 있다.
 - admin 페이지에 가서 해당 이메일을 가진 user를 확인해보면 로그인 비밀값이 저장되어 있는 것을 확인할 수 있다.
+
+### #3.3 sendMail Function with Nodemailer
+
+- 작업 전 아래 내용을 수정한다.
+
+```js
+// server.js
+// 코드 수정
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({
+  path: path.resolve(__dirname, ".env")
+});
+```
+
+- 기존 코드에서 process.env.PORT 는 사실 undefined 였으나, || 4000 예외 처리를 통해 에러가 나지 않고 있었다.
+- dotenv는 같은 폴더에 있는 .env 파일을 가져온다.
+- 하지만 dotenv는 prismagram(최상위폴더)에 있고 .env는 src 폴더에 있었으므로 dotenv는 .env 내용을 가져오지 못했다.
+- 그래서 위와 같이 경로를 설정을 통해 .env 파일을 가져올 수 있도록 수정했다.
+
+- 이제 비밀값을 이메일로 보내기 위해 nodemailer를 사용할 것이다.
+
+`yarn add nodemailer`
+
+- utils.js에 sendMail 함수와 sendSecretMail 함수를 만들어준다.
+
+```js
+// utils.js
+// 코드 추가
+export const sendMail = email => null;
+
+export const sendSecretMail = (address, secret) => {
+  const email = {
+    from: "kdh@prismagram.com",
+    to: address,
+    subject: "🔒Login Secret for Prismagram🔒",
+    html: `Hello! Your login secret it ${secret}.<br/>Copy paste on the app/website to log in`
+  }
+};
+```

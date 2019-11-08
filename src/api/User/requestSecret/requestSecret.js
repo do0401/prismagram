@@ -1,6 +1,6 @@
 import {
   generateSecret
-} from "../../../utills";
+} from "../../../utils";
 import {
   prisma
 } from "../../../../generated/prisma-client";
