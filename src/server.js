@@ -7,12 +7,9 @@ import {
   GraphQLServer
 } from "graphql-yoga";
 import logger from "morgan";
+import passport from "passport";
 import schema from "./schema";
-import {
-  sendSecretMail
-} from "./utils"
-
-sendSecretMail("nmwh47@gmail.com", "123");
+import "./passport";
 
 const PORT = process.env.PORT || 4000;
 
@@ -21,6 +18,7 @@ const server = new GraphQLServer({
 });
 
 server.express.use(logger("dev"));
+server.express.use(passport.authenticate("jwt"));
 
 server.start({
   port: PORT

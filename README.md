@@ -991,3 +991,80 @@ passport.use(new JwtStrategy(jwtOptions, verifyUser));
 
 - passport는 인증 관련한 모든 일을 한다. jwt 토큰이나 쿠키에서 정보를 가져와서 사용자 정보에 serialize(저장)한다.
 - 토큰에서 정보를 가져와서 (express의) request에 붙여주는 것이다. 토큰을 가져와서 해독한 후에 사용자 객체를 request에 추가해준다.
+
+### #3.4 Passport JWT part Two
+
+- verifyUser 함수를 작성해보자.
+
+```js
+// passport.js
+// 코드 추가
+const verifyUser = async (payload, done) => {
+  try {
+    const user = await prisma.user({id: payload.id}); // 사용자를 찾는다.
+    if (user !== null) {
+      return done(null, user);  // 사용자를 찾으면 에러가 없고(null), 우리가 찾은 user를 전달하겠다는 뜻이다.
+    } else {
+      return done(null, false);
+    }
+  } catch (error) {
+    return done(error, false);  // 에러가 있으면 done(error, false) 리턴
+  }
+};
+```
+
+- 우리가 한 작업은 jwt를 가져와ㅏ서 해석하고 확인하는 작업들이다.
+- 아직 jwt를 생성하지는 않았다. jwt를 생성하는 작업을 해보자.
+- 먼저 jsonwebtoken 모듈을 설치한다.
+
+`yarn add jsonwebtoken`
+
+```js
+// utils.js
+// 코드 추가
+import jwt from "jsonwebtoken";
+
+ // sign 함수를 실행할 때 payload를 입력해야 한다. 우리는 사용자의 id를 입력할 것이고, secret key를 입력해야 한다.
+export const generateToken = id => jwt.sign({ id }, process.env.JWT_SECRET);
+// 암호화하고 해독할 때는 같은 private key를 사용한다.
+```
+
+- 토큰 생성 함수를 만들었다.
+- 사용자 토큰 생성을 해보자.
+
+```js
+// confirmSecret.js
+// 코드 수정
+if (user.loginSecret === secret) {
+  return generateToken(user.id);  // jwt가 id를 암호화해서 사용자 토큰을 생성한다.
+} else {
+  throw Error("Wrong email/secret combination");
+}
+
+// passport.js
+// 코드 수정
+// 코드가 잘못된 부분이 있어 수정함
+import { Strategy, ExtractJwt } from "passport-jwt";
+
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET
+};
+
+passport.use(new Strategy(jwtOptions, verifyUser));
+```
+
+- server.js에 passport를 사용해보자.
+
+```js
+// server.js
+// 코드 추가
+import passport from "passport";
+import "./passport";
+// passport.js는 이렇게 import 해야 한다. server.js에서는 passport.js 파일에서 무언가를 받아서 사용할 필요가 없다. passport.js에서 어떤 일이 벌어지는지 몰라도 된다.
+
+// 미들웨어를 사용한다.
+// 경로를 미들웨어로 보호하고 싶을 때 사용한다.
+server.express.use(passport.authenticate("jwt"));
+// 모든 경로를 passport.authenticate("jwt") 로 보호했다.
+```
