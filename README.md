@@ -846,8 +846,8 @@ export const sendMail = email => {
 };
 
 // .env
-SENDGRID_USERNAME=do0401
-SENDGRID_PASSWORD="sendgridqlqjs1"
+SENDGRID_USERNAME= [sendgrid id]
+SENDGRID_PASSWORD= [sendgrid pw]
 ```
 - import 후 sendMail에 options을 만들었다.
 - sendgrid 계정 정보는 .env에 넣어둔다.
@@ -877,4 +877,4 @@ export const sendSecretMail = (address, secret) => {
   return sendMail(email);   // sendMail(email)은 여기서 실행한다.
 };
 ```
-
+- server.js 에서 테스트로 sendSecretMail 함수를 실행시키면 메일이 날아오는 것을 확인할 수 있다.
