@@ -957,3 +957,37 @@ mutation {
 ```
 
 - 에러를 확인할 수 있다.
+- 이제 토큰을 만들어보자. 인증 토큰을 위해 passport.js를 사용할 것이다.
+- passport에서 strategy라는 걸 확인한다. kakao, facebook, github 등 다양한 strategy가 있다.
+- 우리가 사용하는 것은 passport-jwt 이다.
+- passport와 passport-jwt를 설치한다.
+
+`yarn add passport-jwt passport`
+
+- passport.js 파일을 만들고 passport를 import한다.
+- 그리고 옵션을 설정하고 passport.use를 실행한다.
+
+```js
+// src/passport.js
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({path: path.resolve(__dirname, ".env")});
+import passport from "passport";
+import JwtStrategy from "passport-jwt";
+
+const jwtOptions = {
+  jwtFromRequest: JwtStrategy.ExtractJwt.fromAuthHeaderAsBearerToken(), // Authorization 헤더에서 jwt를 찾는 역할을 한다.
+  secret: process.env.JWT_SECRET  // secret 값은 randomkeygen.com 에서 가져와서 .env에 입력했다.
+};
+
+// passport.use에서 사용할 콜백 함수
+const verifyUser = (payload, done) => {
+  // done은 우리가 사용자를 찾았을 때 호출해야 하는 함수이고
+  // payload의 정보로 User를 찾아내는 것이다.
+};
+
+passport.use(new JwtStrategy(jwtOptions, verifyUser));
+```
+
+- passport는 인증 관련한 모든 일을 한다. jwt 토큰이나 쿠키에서 정보를 가져와서 사용자 정보에 serialize(저장)한다.
+- 토큰에서 정보를 가져와서 (express의) request에 붙여주는 것이다. 토큰을 가져와서 해독한 후에 사용자 객체를 request에 추가해준다.
