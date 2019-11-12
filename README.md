@@ -878,3 +878,82 @@ export const sendSecretMail = (address, secret) => {
 };
 ```
 - server.js 에서 테스트로 sendSecretMail 함수를 실행시키면 메일이 날아오는 것을 확인할 수 있다.
+
+### #3.4 Passport JWT part One
+
+- 테스트로 넣었던 코드를 삭제하고 requestSecret.js에서 sendSecretMail 함수를 실행하도록 추가한다.
+
+```js
+// requestSecret.js
+// 코드 추가
+try {
+  await sendSecretMail(email, loginSecret);   // sendSecretMail 실행
+  await prisma.updateUser({
+    data: {
+      loginSecret
+    },
+    where: {
+      email
+    }
+  });
+  return true;
+}
+```
+
+- 메일 내용을 아주 약간 styling 해준다.
+
+```js
+// utils.js
+// 코드 수정
+export const sendSecretMail = (address, secret) => {
+  const email = {
+    from: "kdh@prismagram.com",
+    to: address,
+    subject: "🔒Login Secret for Prismagram🔒",
+    html: `Hello! Your login secret is <strong>${secret}</strong>.<br/>Copy paste on the app/website to log in` // secret 코드를 강조했다.
+  };
+  return sendMail(email);
+};
+```
+
+- 이제 confirmSecret 을 만든다.
+
+```js
+// api/User/confirmSecret/confirmSecret.graphql
+type Mutation {
+  confirmSecret(secret: String!, email: String!): String!
+  // 인자로 secret과 email을 받고,  string을 리턴한다.
+  // 이 함수는 jwt 토큰을 리턴할 것이다.
+}
+
+// api/User/confirmSecret/confirmSecret.js
+import { prisma } from "../../../../generated/prisma-client";
+
+export default {
+  Mutation: {
+    confirmSecret: async (_, args) => {
+      const { email, secret } = args;   // args에서 email과 secret을 가져온다.
+      const user = await prisma.user({ email }); // prisma.user 함수에 email을 인자로 입력해서 사용자를 가져온다.
+      if (user.loginSecret === secret) {
+        // user.loginSecret이 secret과 같다면 JWT 토큰을 리턴한다.
+        // JWT
+        return "TOKEN"
+      } else {
+        // 같지 않으면 에러를 전달한다.
+        throw Error("Wrong email/secret combination");
+      }
+    }
+  }
+}
+```
+
+- playground에서 일부러 틀린 값을 입력해보자.
+
+```js
+// playground
+mutation {
+  confirmSecret(email:"nmwh47@gmail.com", secret:"calculating jellyyy")
+}
+```
+
+- 에러를 확인할 수 있다.
