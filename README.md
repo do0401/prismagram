@@ -91,7 +91,7 @@ server.start({ port: PORT }, () =>
 `yarn add @babel/node`
 `yarn add @babel/core`
 
-- 이제 graphql playground에서 hell 쿼리를 실행하면 hi 라는 응답이 올 것이다.
+- 이제 graphql playground에서 hello 쿼리를 실행하면 hi 라는 응답이 올 것이다.
 
 ### #1.2 Setting Up the Server like the Pros
 - morgan이라는 logger(로깅 전용 모듈) 미들웨어를 추가한다.
@@ -617,7 +617,7 @@ type Query {
 }
 ```
 
-- graphql 파일에 mutation만 있으면 에러가 나므로 임의의 Query도 만들었다.
+- graphql 파일에 mutation만 있으면 에러가 발생하므로 임의의 Query도 만들었다.
 
 ```js
 // createAccount.js
@@ -1068,3 +1068,59 @@ import "./passport";
 server.express.use(passport.authenticate("jwt"));
 // 모든 경로를 passport.authenticate("jwt") 로 보호했다.
 ```
+
+### #3.6 Passport JWT part Three
+
+- .env를 다른 방식으로 불러오도록 하자.
+
+```js
+// src/env.js
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({
+  path: path.resolve(__dirname, ".env")
+});
+
+// server.js
+// 코드 수정
+import "./env";
+```
+
+- env.js 파일을 생성하고 기존 .env를 import했던 코드를 입력한다.
+- 그리고 server.js에서 해당 js 파일을 import한다.
+- 마지막으로 passport.js.와 utils.js 에서 .env를 import 했던 코드를 삭제한다.
+
+- 이제 authenticateJwt 라는 미들웨어 함수를 만들어보자. 토큰을 받아서 작업을 할 것이다.
+
+```js
+// passport.js
+// 코드 추가
+// 이 미들웨어가 실행되면 passport authenticate가 실행된다.
+export const authenticateJwt = (req, res, next) =>
+  // 이 함수에서는 passport에 어떤 것도 입력되지 않기를 원하므로, sessions: false 옵션을 추가했다.
+  // passport가 함수에 사용자 정보를 전달해 줄 것이다. verifyUser 함수를 통해 사용자 정보를 전달해주는 것이다.
+  passport.authenticate("jwt", { sessions: false }, (error, user) => {
+    if (user) {
+      // verifyUser에서 사용자를 받아온 후에, 사용자가 존재하면 그 사용자 정보를 req 객체에 붙여준다.
+      req.user = user;
+    }
+    // express 에서는 미들웨어를 지나서 라우트가 실행된다.
+    // 즉, 토큰을 받아서, 해석하고, 사용자를 찾고, 사용자가 존재한다면 req 객체에 사용자를 추가하고 나서 graphql 함수를 실행하는 것이다.
+    next();
+  })(req, res, next);
+
+  passport.use(new Strategy(jwtOptions, verifyUser));
+  // passport.use를 실행하고, passport.initialize를 실행해야 한다.
+  passport.initialize();
+```
+
+- 마지막에 `(req, res, next)` 가 붙는 것이 이상해 보일 것이다.
+- `(req, res, next)` 이전 부분은 함수이다. 즉, `fn(req, res, next);` 이런 함수를 실행해줘야 하는 것이고, 실행하고 나면 다음 함수로 넘어가는 것이다.
+- `fn` 부분은 함수를 리턴하고 리턴된 함수를 `(req, res, next)`로 실행해줘야 한다.
+- 이 경우에는 그 실행해야 하는 함수가 graphql 함수다.
+- 이러한 방식은 ES6 문법 중 하나인 IIFE(즉시 실행 함수 표현)라는 문법이다.
+- 참조: [IIFE](https://developer.mozilla.org/ko/docs/Glossary/IIFE)
+
+- 이 함수들이 실행되는 순서는, server.js에서 `import "./passport"` 가 실행되면
+먼저 initialize 가 실행되고, 그 다음 use가 실행되며, authenticate가 마지막으로 실행된다.
+- 단, authenticate는 우리가 요청했을 때 실행된다.
