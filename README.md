@@ -992,7 +992,7 @@ passport.use(new JwtStrategy(jwtOptions, verifyUser));
 - passport는 인증 관련한 모든 일을 한다. jwt 토큰이나 쿠키에서 정보를 가져와서 사용자 정보에 serialize(저장)한다.
 - 토큰에서 정보를 가져와서 (express의) request에 붙여주는 것이다. 토큰을 가져와서 해독한 후에 사용자 객체를 request에 추가해준다.
 
-### #3.4 Passport JWT part Two
+### #3.5 Passport JWT part Two
 
 - verifyUser 함수를 작성해보자.
 
