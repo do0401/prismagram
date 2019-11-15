@@ -1124,3 +1124,57 @@ export const authenticateJwt = (req, res, next) =>
 - 이 함수들이 실행되는 순서는, server.js에서 `import "./passport"` 가 실행되면
 먼저 initialize 가 실행되고, 그 다음 use가 실행되며, authenticate가 마지막으로 실행된다.
 - 단, authenticate는 우리가 요청했을 때 실행된다.
+
+```js
+// server.js
+// 코드 수정
+// 기존 코드 => server.express.use(passport.authenticate("jwt"));
+server.express.use(authenticateJwt);
+```
+
+- server.js 에서도 기존 코드를 삭제하고, 미들웨어 함수 authenticateJwt 를 사용하도록 수정했다.
+- 이제 resolver에 전달해줘야 한다.
+- resolver 사이에서 정보를 공유할 때 context를 사용한다.
+- context에 prisma를 담아서 사용하는 방식은 많은 사람들이 사용하고 있는 방식 중 하나이다.
+- 하지만 이 방식은 vscode가 이해하지 못하며, 자동 완성 기능도 사용할 수 없으므로, 우리는 이 방식을 사용하지는 않을 것이다.
+
+```js
+// server.js
+// 코드 추가
+const server = new GraphQLServer({
+  schema,
+  context: ({ request }) => ({ request }) // context에 request만 담긴 객체를 리턴한다.
+});
+```
+
+- 위와 같이 하면 context에 request가 담겨서 전달될 것이다.
+- reqeustSecret 함수에서 request 인자를 받도록 추가한다.
+
+```js
+// requestSecret.js
+// 코드 추가
+export default {
+  Mutation: {
+    requestSecret: async (_, args, { request }) => {  // request를 인자로 추가했다.
+      const {
+        email
+      } = args;
+      const loginSecret = generateSecret();
+      try {
+        await sendSecretMail(email, loginSecret);
+        await prisma.updateUser({ data: { loginSecret }, where: { email }});
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+}
+```
+
+- 서버에 전달되는 모든 요청은 authenticateJwt 함수를 통과한다.
+- authenticateJwt 함수에서는 passport.authenticate('jwt') 함수를 실행하고, 이 함수는 strategy를 활용해서 jwt 토큰을 추출한다.
+- 토큰이 추출되면 verifyUser를 payload와 함께 실행한다.
+- payload는 토큰에서 해석된 id를 받아서, user를 찾아서 리턴한다.
+- 그리고 콜백 함수가 실행되어서, 사용자가 있으면 그 사용자를 req에 추가한다.
+- server.js에서는 context에 request를 담아준다.
