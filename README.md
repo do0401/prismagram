@@ -1178,3 +1178,115 @@ export default {
 - payload는 토큰에서 해석된 id를 받아서, user를 찾아서 리턴한다.
 - 그리고 콜백 함수가 실행되어서, 사용자가 있으면 그 사용자를 req에 추가한다.
 - server.js에서는 context에 request를 담아준다.
+
+### #3.7 toggleLike Resolver part One
+
+- 좋아요 기능을 위해 api 폴더에 Post 폴더를 생성하고, 그 안에 toggleLike 폴더를 만들었다.
+- toggleLike 는 우리에게 인증을 요구하는 첫번째 resolver가 될 것이다.
+
+```js
+// api/Post/toggleLike/toggleLike.graphql
+type Mutation {
+	toggleLike(postId: Strikg!): Boolean!
+}
+
+// api/Post/toggleLike/toggleLike.js
+export default {
+  Mutation: {
+    toggleLike: async (_, args, {
+      request
+    }) => {
+      // if (!request.user) {     -> 이러한 방식은 효율적이지 않다.
+      //   throw Error('error');    왜냐하면 이 resolver 뿐만 아니라 다른 resolver들도 동일하게 예외 처리가 되어야 하기 때문이다.
+      // }
+    }
+  }
+}
+```
+
+- 효율적인 코드를 위해 middleware를 만들자.
+
+```js
+// src/middlewares.js
+export const isAuthenticated = request => {
+  if (!request.user) {
+    throw Error("You need to log in to perform this action.");
+  }
+  return;
+};
+
+// toggleLike.js
+import {
+  isAuthenticated
+} from "../../../middlewares";
+
+export default {
+  Mutation: {
+    toggleLike: async (_, args, {
+      request
+    }) => {
+      isAuthenticated(request); // request 안에 user가 없으면 모든 function이 멈출 것이다.
+      const { postId } = args;
+      const { user } = request;
+      return true;
+    }
+  }
+}
+```
+
+- 다음은 user가 존재(existence)하는지를 확인해야 한다.
+
+```js
+// toggleLike.js
+import {
+  isAuthenticated
+} from "../../../middlewares";
+
+export default {
+  Mutation: {
+    toggleLike: async (_, args, {
+      request
+    }) => {
+      isAuthenticated(request); // request 안에 user가 없으면 모든 function이 멈출 것이다.
+      const { postId } = args;
+      const { user } = request;
+      try {
+        // 좋아요가 있는지 확인
+        const existingLike = await prisma.$exists.like({
+          AND: [{
+            user: {
+              id: user.id   // user.id가 있고
+            }
+          },
+          {
+            post: {
+              id: postId  // postId가 있으면 좋아요가 존재하는 것임
+            }
+          }]
+        });
+        if (existingLike) {
+          // existingLike가 존재하면 좋아요를 해제하는 작업이 처리되어야 한다.
+          // To do
+        } else {
+          // exsitingLike가 없으면 좋아요를 만들어야 한다.
+          const newLike = await prisma.createLike({
+            user: {
+              connect: {
+                id: user.id   // user가 갖고 있는 좋아요를 만든다.
+              }
+            },
+            post: {
+              connect: {
+                id: postId    //  post가 갖고 있는 좋아요를 만든다.
+              }
+            }
+          });
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+}
+```

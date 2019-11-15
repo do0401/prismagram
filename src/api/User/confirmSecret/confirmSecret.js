@@ -7,7 +7,10 @@ import {
 
 export default {
   Mutation: {
-    confirmSecret: async (_, args) => {
+    confirmSecret: async (_, args, {
+      request
+    }) => {
+      console.log(request);
       const {
         email,
         secret
