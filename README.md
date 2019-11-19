@@ -1185,12 +1185,12 @@ export default {
 - toggleLike 는 우리에게 인증을 요구하는 첫번째 resolver가 될 것이다.
 
 ```js
-// api/Post/toggleLike/toggleLike.graphql
+// api/Like/toggleLike/toggleLike.graphql
 type Mutation {
 	toggleLike(postId: Strikg!): Boolean!
 }
 
-// api/Post/toggleLike/toggleLike.js
+// api/Like/toggleLike/toggleLike.js
 export default {
   Mutation: {
     toggleLike: async (_, args, {
@@ -1272,12 +1272,12 @@ export default {
           const newLike = await prisma.createLike({
             user: {
               connect: {
-                id: user.id   // user가 갖고 있는 좋아요를 만든다.
+                id: user.id
               }
             },
             post: {
               connect: {
-                id: postId    //  post가 갖고 있는 좋아요를 만든다.
+                id: postId
               }
             }
           });
@@ -1290,3 +1290,86 @@ export default {
   }
 }
 ```
+
+### #3.8 toggleLike and addComment Resolver
+
+- 이제 좋아요를 취소(삭제) 기능을 구현한다.
+- 먼저 바로 위 코드에서 AND 부분은 지울 수 없다. user 나 post 를 기반으로 삭제할 수 있는 방법이 없다.
+
+```js
+// toggleLike.js
+// 코드 수정
+const filterOptions = { // filterOptions 라는 변수에 동일한 내용을 담는다.
+  AND: [{
+      user: {
+        id: user.id
+      }
+    },
+    {
+      post: {
+        id: postId
+      }
+    }
+  ]
+};
+try {
+  const existingLike = await prisma.$exists.like(filterOptions);  // filterOptions를 전달해서 like를 얻는다.
+  if (existingLike) {
+    await prisma.deleteManyLikes(filterOptions); // filterOptions 를 전달해서 like를 찾아서 삭제한다.
+  } else {
+    const newLike = await prisma.createLike({
+      user: {
+        connect: {
+          id: user.id
+        }
+      },
+      post: {
+        connect: {
+          id: postId
+        }
+      }
+    });
+  }
+  return true;
+}
+```
+
+- deleteManyLikes 함수를 통해 like를 삭제하도록 했다.
+- 이제 Comment 작업을 해보자.
+
+```js
+// api/Comment/addComment/addComment.graphql
+type Mutation {
+	addComment(text: String!, postId: String!): Comment!
+}
+
+// api/Comment/addComment/addComment.js
+import { isAuthenticated } from "../../../middlewares";
+import { prisma } from "../../../../generated/prisma-client";
+
+export default {
+  Mutation: {
+    addComment: async (_, args, { request }) => {
+      isAuthenticated(request);
+      const { text, postId } = args;
+      const { user } = request;
+      const comment = await prisma.createComment({
+        user: {
+          connect: {
+            id: user.id
+          }
+        },
+        post: {
+          connect: {
+            id: postId
+          }
+        },
+        text
+      });
+    }
+  }
+}
+```
+
+- addComment 폴더를 생성하고 addComment 관련 graphql / js 파일을 만들었다.
+- prisma를 이용하여 매우 간단하고 멋지게 Comment를 만들었다.

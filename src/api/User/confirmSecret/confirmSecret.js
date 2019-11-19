@@ -10,7 +10,6 @@ export default {
     confirmSecret: async (_, args, {
       request
     }) => {
-      console.log(request);
       const {
         email,
         secret

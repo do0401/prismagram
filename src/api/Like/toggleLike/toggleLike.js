@@ -17,22 +17,23 @@ export default {
       const {
         user
       } = request;
-      try {
-        const existingLike = await prisma.$exists.like({
-          AND: [{
-              user: {
-                id: user.id
-              }
-            },
-            {
-              post: {
-                id: postId
-              }
+      const filterOptions = {
+        AND: [{
+            user: {
+              id: user.id
             }
-          ]
-        });
+          },
+          {
+            post: {
+              id: postId
+            }
+          }
+        ]
+      };
+      try {
+        const existingLike = await prisma.$exists.like(filterOptions);
         if (existingLike) {
-          // To do
+          await prisma.deleteManyLikes(filterOptions);
         } else {
           const newLike = await prisma.createLike({
             user: {
