@@ -1373,3 +1373,62 @@ export default {
 
 - addComment 폴더를 생성하고 addComment 관련 graphql / js 파일을 만들었다.
 - prisma를 이용하여 매우 간단하고 멋지게 Comment를 만들었다.
+
+### #3.9 searchUser and searchImage resolver
+
+- searchUser 작업을 시작한다.
+- api/User 폴더 밑에 searchUser 폴더를 생성하고, 파일을 만든다.
+
+```js
+// api/User/searchUser/searchUser.graphql
+type Query {
+	searchUser(term: String!): [User!]!   // User는 array 다.
+}
+
+// api/User/searchUser/searchUser.js
+import { prisma } from "../../../../generated/prisma-client";
+
+export default {
+  Query: {
+    searchUser: async (_, args) =>
+      prisma.users({
+        where: {
+          OR: [
+            { username_contains: args.term },
+            { firstName_contains: args.term },
+            { lastName_contains: args.term }
+          ]
+        }
+      })
+  }
+}
+```
+
+- 위와 같이 prisma는 hard core한 검색을 쉽게 구현할 수 있다.
+- 다음은 searchImage 를 해보자.
+- api/Post 폴더 밑에 searchPost 폴더를 생성하고, 파일을 만든다.
+
+```js
+// api/Post/searchPost/searchPost.graphql
+type Query {
+	searchPost(term: String!): [Post!]!   // Posts는 array 다.
+}
+
+// api/Post/searchPost/searchPost.js
+import { prisma } from "../../../generated/prisma-client";
+
+export default {
+  Query: {
+    searchPost: async (_, args) => prisma.posts({
+      where: {
+        OR: [
+          { location_starts_with: args.term },
+          { caption_starts_with: args.term }
+        ]
+      }
+    })
+  }
+}
+```
+
+- searchUser와 마찬가지로 쉽게 구현할 수 있다.
