@@ -1432,3 +1432,90 @@ export default {
 ```
 
 - searchUser와 마찬가지로 쉽게 구현할 수 있다.
+
+### #3.10 follow unfollow Resolver
+
+- follow user를 작업해보자.
+- User 폴더에 follow 폴더를 생성하고, 파일들을 만든다.
+
+```js
+// api/User/follow/follow.graphql
+type Mutation {
+	follow(id: String!): Boolean
+}
+
+// api/User/follow/follow.js
+import { isAuthenticated } from "../../../middlewares";
+import { prisma } from "../../../../generated/prisma-client";
+
+export default {
+  Mutation: {
+    follow: async (_, args, { request }) => {
+      isAuthenticated(request);
+      const { id } = args;
+      const {
+        user
+      } = reqeust;
+      try {
+        await prisma.updateUser({
+          where: {
+            id: user.id
+          },
+          data: {
+            following: {
+              connect: {
+                id
+              }
+            }
+          }
+        })
+      } catch {
+        return false;
+      }
+    }
+  }
+}
+```
+
+- unfollow도 follow와 마찬가지다.
+
+```js
+// api/User/unfollow/unfollow.graphql
+type Mutation {
+  unfollow(id: String!): Boolean!
+}
+
+// api/User/unfollow/unfollow.js
+import { isAuthenticated } from "../../../middlewares"
+import { prisma } from "../../../../generated/prisma-client";
+
+export default {
+  Mutation: {
+    unfollow: async (_, args, { request }) => {
+      isAuthenticated(request);
+      const { id } = args;
+      const { user } = request;
+      try {
+        await prisma.updateUser({
+          where: { id: user.id },
+          data: {
+            following: {
+              disconnect: {
+                id
+              }
+            }
+          }
+        })
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+}
+```
+
+- HTTP HEADERS에 아래 내용 추가
+```
+{"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNrMm1tdGYza2I2OW8wYjAwazFlcTM3dXYiLCJpYXQiOjE1NzY0NjIyNjJ9.VE3duIC1HYXaaTlvRoUw-k_XTcIeb4zcc9OVNypPQFs"}
+```
